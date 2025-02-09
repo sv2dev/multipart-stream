@@ -1,0 +1,10 @@
+{
+  "name": "@sv2dev/multipart-stream",
+  "version": "0.0.0",
+  "description": "A utility to process multipart/form-data and multipart/mixed bodies.",
+  "exports": "./index.ts",
+  "publish": {
+    "include": ["LICENSE", "README.md", "**/*.ts"],
+    "exclude": ["**/*.spec.ts"]
+  }
+}
