@@ -44,6 +44,21 @@ export class Part {
     );
   }
 
+  /**
+   * The filename of the part.
+   *
+   * This is the value of the `Content-Disposition` header of the part.
+   * Technically it can be left out, such that, in contrast to `Blob`, it is
+   * nullable.
+   */
+  get filename() {
+    return (
+      this.headers
+        .get("content-disposition")
+        ?.match(/; filename="([^"]+)"/)?.[1] ?? null
+    );
+  }
+
   #stream: ReadableStream<Uint8Array<ArrayBufferLike>>;
 
   constructor(stream: ReadableStream<Uint8Array>, readonly headers: Headers) {
