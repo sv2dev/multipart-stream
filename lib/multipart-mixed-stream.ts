@@ -53,7 +53,7 @@ export function streamParts(
       if (chunk.length > 0) {
         if (findSubArray(chunk, end, -end.length))
           chunk = chunk.slice(0, -end.length);
-        partWriter!.write(chunk);
+        partWriter?.write(chunk);
       }
     },
     flush() {

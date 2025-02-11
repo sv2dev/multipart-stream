@@ -12,6 +12,14 @@ describe("streamParts()", () => {
     expect(part2.type).toEqual("application/json");
     expect(await part2.json()).toEqual({ hello: "world" });
   });
+
+  it("should allow empty body", async () => {
+    const body = new Blob([end]).stream();
+
+    const parts = await Array.fromAsync(streamParts(body, boundary));
+
+    expect(parts.length).toBe(0);
+  });
 });
 
 const boundary = "BOUNDARY";
