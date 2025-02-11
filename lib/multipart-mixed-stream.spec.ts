@@ -20,6 +20,28 @@ describe("streamParts()", () => {
 
     expect(parts.length).toBe(0);
   });
+
+  it("should work with a multipart/form-data request", async () => {
+    const formData = new FormData();
+    formData.append("text", "Hello, world!");
+    formData.append(
+      "json",
+      new Blob([JSON.stringify({ hello: "world" })], {
+        type: "application/json",
+      })
+    );
+
+    const request = new Request("http://localhost:3000", {
+      body: formData,
+    });
+
+    const [part1, part2] = await Array.fromAsync(streamParts(request));
+
+    expect(part1.type).toBeNull();
+    expect(await part1.text()).toEqual("Hello, world!");
+    expect(part2.type).toEqual("application/json;charset=utf-8");
+    expect(await part2.json()).toEqual({ hello: "world" });
+  });
 });
 
 const boundary = "BOUNDARY";
