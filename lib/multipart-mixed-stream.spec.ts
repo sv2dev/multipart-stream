@@ -1,33 +1,23 @@
 import { describe, expect, it } from "bun:test";
-import { iterateMultipartMixed } from "./multipart-mixed-stream";
+import { streamParts } from "./multipart-mixed-stream";
 
-describe("iterateMultipartMixed", () => {
+describe("streamParts()", () => {
   it("should yield headers and streams", async () => {
-    const body = new Blob([createChunk([textPart, jsonPart, end])]).stream();
+    const body = new Blob([textPart, jsonPart, end]).stream();
 
-    const parts = await Array.fromAsync(iterateMultipartMixed(body, boundary));
+    const [part1, part2] = await Array.fromAsync(streamParts(body, boundary));
 
-    expect(parts).toEqual([
-      [new Headers({ "content-type": "text/plain" }), new Blob([textPart])],
-      [
-        new Headers({ "content-type": "application/json" }),
-        expect.any(ReadableStream),
-      ],
-    ]);
+    expect(part1.type).toEqual("text/plain");
+    expect(await part1.text()).toEqual("Hello, world!");
+    expect(part2.type).toEqual("application/json");
+    expect(await part2.json()).toEqual({ hello: "world" });
   });
 });
 
 const boundary = "BOUNDARY";
 
-const textPart = `--${boundary}\r\nContent-Type: text/plain\r\n\r\nHello, world!`;
+const textPart = `--${boundary}\r\nContent-Type: text/plain\r\n\r\nHello, world!\r\n`;
 const jsonPart = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(
   { hello: "world" }
-)}`;
+)}\r\n`;
 const end = `--${boundary}--`;
-
-const encoder = new TextEncoder();
-
-function createChunk(parts: string[]) {
-  const chunkText = parts.join("\r\n");
-  return encoder.encode(chunkText);
-}
