@@ -1,12 +1,12 @@
 {
   "name": "@sv2dev/multipart-stream",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A utility to process multipart/form-data and multipart/mixed bodies.",
   "main": "index.ts",
   "module": "index.ts",
   "type": "module",
   "repository": {
-    "url": "https://github.com/sv2dev/queue",
+    "url": "https://github.com/sv2dev/multipart-stream",
     "type": "git"
   },
   "scripts": {
