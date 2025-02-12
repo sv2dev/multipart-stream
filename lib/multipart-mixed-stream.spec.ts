@@ -42,6 +42,25 @@ describe("streamParts()", () => {
     expect(part2.type).toEqual("application/json;charset=utf-8");
     expect(await part2.json()).toEqual({ hello: "world" });
   });
+
+  it("should correctly handle parts split across chunks", async () => {
+    const data = textPart + jsonPart + end;
+    const body = new ReadableStream({
+      start(controller) {
+        for (let i = 0; i < data.length; i += 1) {
+          controller.enqueue(data.slice(i, i + 1));
+        }
+        controller.close();
+      },
+    });
+
+    const [part1, part2] = await Array.fromAsync(streamParts(body, boundary));
+
+    expect(part1.type).toEqual("text/plain");
+    expect(await part1.text()).toEqual("Hello, world!");
+    expect(part2.type).toEqual("application/json");
+    expect(await part2.json()).toEqual({ hello: "world" });
+  });
 });
 
 const boundary = "BOUNDARY";

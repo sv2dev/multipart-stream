@@ -1,1 +1,1 @@
-export { Queue } from "./lib/queue";
+export { streamParts } from "./lib/multipart-mixed-stream";
