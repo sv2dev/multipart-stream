@@ -7,6 +7,14 @@ const DLB = textEncoder.encode("\r\n\r\n");
 
 type IterableReadableStream<T> = ReadableStream<T> & AsyncIterable<T>;
 
+/**
+ * Streams the parts of a multipart/mixed or multipart/form-data body.
+ *
+ * @param bodyOrContainer - A request, response, or readable stream.
+ * @param boundary - The boundary string. If not provided, the boundary will be
+ *   extracted from the `Content-Type` header of the request or response.
+ * @returns An iterable readable stream of parts.
+ */
 export function streamParts(
   bodyOrContainer: Request | Response | ReadableStream<Uint8Array | string>,
   boundary?: string

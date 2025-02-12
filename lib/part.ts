@@ -14,7 +14,7 @@ export class Part {
    * Technically it can be left out, such that, in contrast to `Blob`, it is
    * nullable.
    */
-  get type() {
+  get type(): string | null {
     return this.headers.get("content-type");
   }
 
@@ -25,7 +25,7 @@ export class Part {
    * Technically it can be left out, such that, in contrast to `Blob`, it is
    * nullable.
    */
-  get size() {
+  get size(): number | null {
     const contentLength = this.headers.get("content-length");
     return contentLength ? parseInt(contentLength) : null;
   }
@@ -37,7 +37,7 @@ export class Part {
    * Technically it can be left out, such that, in contrast to `Blob`, it is
    * nullable.
    */
-  get name() {
+  get name(): string | null {
     return (
       this.headers.get("content-disposition")?.match(/; name="([^"]+)"/)?.[1] ??
       null
@@ -51,7 +51,7 @@ export class Part {
    * Technically it can be left out, such that, in contrast to `Blob`, it is
    * nullable.
    */
-  get filename() {
+  get filename(): string | null {
     return (
       this.headers
         .get("content-disposition")
@@ -69,7 +69,7 @@ export class Part {
    * Consume the part as an array buffer.
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/arrayBuffer)
    */
-  async arrayBuffer() {
+  async arrayBuffer(): Promise<ArrayBufferLike> {
     return (await this.bytes()).buffer;
   }
 
@@ -77,7 +77,7 @@ export class Part {
    * Consume the part as bytes.
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/bytes)
    */
-  async bytes() {
+  async bytes(): Promise<Uint8Array> {
     const reader = this.#stream.getReader();
     const buffers: Uint8Array[] = [];
     while (true) {
@@ -92,7 +92,7 @@ export class Part {
    * Consume the part as text.
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/text)
    */
-  async text() {
+  async text(): Promise<string> {
     return textDecoder.decode(await this.bytes());
   }
 
@@ -108,7 +108,7 @@ export class Part {
    * Consume the part as JSON.
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/json)
    */
-  async json() {
+  async json(): Promise<unknown> {
     return JSON.parse(await this.text());
   }
 }
