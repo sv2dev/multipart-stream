@@ -1,6 +1,6 @@
 {
   "name": "@sv2dev/multipart-stream",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A utility to process multipart/form-data and multipart/mixed bodies.",
   "exports": "./index.ts",
   "publish": {
