@@ -116,9 +116,11 @@ function indexOf(data: Uint8Array, sub: Uint8Array, startAt = 0) {
 
 function parseHeaders(data: Uint8Array) {
   return new Headers(
-    textDecoder
-      .decode(data)
-      .split("\r\n")
-      .map((line) => line.split(": ") as [string, string])
+    data.length > 0
+      ? textDecoder
+          .decode(data)
+          .split("\r\n")
+          .map((line) => line.split(": ") as [string, string])
+      : undefined
   );
 }
