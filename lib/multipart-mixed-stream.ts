@@ -26,7 +26,7 @@ export function streamParts(
   ) {
     boundary ??= bodyOrContainer.headers
       .get("content-type")
-      ?.match(/boundary="([^"]+)"/)?.[1]!;
+      ?.match(/boundary="?([^"]+)"?/)?.[1]!;
     body = bodyOrContainer.body!;
   } else {
     body = bodyOrContainer;
