@@ -15,11 +15,11 @@ type IterableReadableStream<T> = ReadableStream<T> & AsyncIterable<T>;
  *   extracted from the `Content-Type` header of the request or response.
  * @returns An iterable readable stream of parts.
  */
-export function streamParts(
-  bodyOrContainer: Request | Response | ReadableStream<Uint8Array | string>,
+export async function* streamParts(
+  bodyOrContainer: Request | Response | ReadableStream<Uint8Array>,
   boundary?: string
-): IterableReadableStream<Part> {
-  let body: ReadableStream<Uint8Array | string> | undefined;
+): AsyncGenerator<Part> {
+  let src: IterableReadableStream<Uint8Array> | undefined;
   if (
     bodyOrContainer instanceof Request ||
     bodyOrContainer instanceof Response
@@ -27,71 +27,65 @@ export function streamParts(
     boundary ??= bodyOrContainer.headers
       .get("content-type")
       ?.match(/boundary="?([^"]+)"?/)?.[1]!;
-    body = bodyOrContainer.body!;
+    src = bodyOrContainer.body! as IterableReadableStream<Uint8Array>;
   } else {
-    body = bodyOrContainer;
+    src = bodyOrContainer as IterableReadableStream<Uint8Array>;
   }
   const b = textEncoder.encode(`--${boundary}\r\n`);
-  const end = textEncoder.encode(`--${boundary}--`);
+  const end = textEncoder.encode(`\r\n--${boundary}--`);
   let headers: Headers | undefined;
-  let partWriter: WritableStreamDefaultWriter<Uint8Array> | undefined;
-  let margin: Uint8Array | undefined;
+  let buffered: Uint8Array | undefined;
 
-  const stream = new TransformStream<Uint8Array | string, Part>({
-    async transform(chunk, controller) {
-      let bidx = 0;
-      if (typeof chunk === "string") chunk = textEncoder.encode(chunk);
-      if (margin) {
-        chunk = concat(margin, chunk);
-        margin = undefined;
+  const reader = src.getReader();
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    let bidx = 0;
+    let chunk = value;
+    if (buffered) {
+      chunk = concat(buffered, chunk);
+      buffered = undefined;
+    }
+
+    while ((bidx = indexOf(chunk, b)) > -1) {
+      const headersEnd = indexOf(chunk, DLB, bidx);
+      if (headersEnd === -1) {
+        buffered = chunk;
+        break;
       }
 
-      // Find all boundaries in current chunk
-      while ((bidx = indexOf(chunk, b)) > -1) {
-        const headersEnd = indexOf(chunk, DLB, bidx);
-        if (partWriter) {
-          // Current part is complete
-          if (bidx > LB.length) {
-            // don't write the trailing line break
-            partWriter.write(chunk.slice(0, bidx - LB.length));
+      headers = parseHeaders(chunk.slice(bidx + b.length, headersEnd));
+      chunk = chunk.slice(headersEnd + DLB.length);
+      yield new Part(
+        (async function* () {
+          while (true) {
+            const bidx = indexOf(chunk, b);
+            if (bidx > -1) {
+              yield chunk.slice(0, bidx - LB.length);
+              chunk = chunk.slice(bidx);
+              return;
+            }
+            let endIdx = indexOf(chunk.slice(-end.length - LB.length), end);
+            if (endIdx > -1) {
+              yield chunk.slice(0, endIdx - end.length - LB.length);
+              chunk = new Uint8Array(0);
+              return;
+            }
+            if (chunk.length >= b.length + LB.length) {
+              yield chunk.slice(0, -b.length - 1);
+              chunk = chunk.slice(-b.length - 1);
+            }
+            const { value, done } = await reader.read();
+            if (done) throw new Error("Unexpected end of stream");
+            chunk = concat(chunk, value);
           }
-          partWriter.close();
-          partWriter = undefined;
-        }
-        if (headersEnd === -1) {
-          // If headers incomplete, don't process this chunk yet
-          margin = chunk;
-          return;
-        }
-        headers = parseHeaders(chunk.slice(bidx + b.length, headersEnd));
-        const { readable, writable } = new TransformStream();
-        partWriter = writable.getWriter();
-        controller.enqueue(new Part(readable, headers));
-        chunk = chunk.slice(headersEnd + DLB.length);
-        bidx = 0;
-      }
-
-      const endIdx = indexOf(chunk, end, -end.length);
-      if (endIdx > -1) {
-        // This is the last chunk / part, write without end boundary and line break
-        if (endIdx > LB.length) {
-          partWriter?.write(chunk.slice(0, endIdx - LB.length));
-        }
-        return;
-      }
-      // Boundary could be split across chunks, so we keep the tail of the chunk
-      if (chunk.length >= b.length + LB.length) {
-        partWriter?.write(chunk.slice(0, -b.length - 1));
-        margin = chunk.slice(-b.length - 1);
-        return;
-      }
-      margin = chunk;
-    },
-    flush() {
-      partWriter?.close();
-    },
-  });
-  return body.pipeThrough(stream) as IterableReadableStream<Part>;
+        })(),
+        headers
+      );
+    }
+    buffered = chunk;
+  }
 }
 
 function concat(

@@ -6,7 +6,7 @@ const textDecoder = new TextDecoder();
  * It is similar to a `Blob`, but implements the subset of the `Blob` API that
  * makes sense for parts of a multipart message.
  */
-export class Part {
+export class Part implements AsyncIterable<Uint8Array> {
   /**
    * The type of the part.
    *
@@ -59,11 +59,17 @@ export class Part {
     );
   }
 
-  #stream: ReadableStream<Uint8Array<ArrayBufferLike>>;
-
-  constructor(stream: ReadableStream<Uint8Array>, readonly headers: Headers) {
-    this.#stream = stream;
+  /**
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator)
+   */
+  [Symbol.asyncIterator](): AsyncIterator<Uint8Array> {
+    return this.iterable;
   }
+
+  constructor(
+    private readonly iterable: AsyncGenerator<Uint8Array>,
+    readonly headers: Headers
+  ) {}
 
   /**
    * Consume the part as an array buffer.
@@ -78,14 +84,7 @@ export class Part {
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/bytes)
    */
   async bytes(): Promise<Uint8Array> {
-    const reader = this.#stream.getReader();
-    const buffers: Uint8Array[] = [];
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffers.push(value);
-    }
-    return await new Blob(buffers).bytes();
+    return await new Blob(await Array.fromAsync(this)).bytes();
   }
 
   /**
@@ -94,14 +93,6 @@ export class Part {
    */
   async text(): Promise<string> {
     return textDecoder.decode(await this.bytes());
-  }
-
-  /**
-   * Get the stream of the part.
-   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/stream)
-   */
-  stream(): ReadableStream<Uint8Array> {
-    return this.#stream;
   }
 
   /**
