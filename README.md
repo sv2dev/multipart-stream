@@ -7,7 +7,7 @@ A utility to process multipart/form-data and multipart/mixed bodies.
 ## Usage
 
 ```ts
-import { streamParts } from "@sv2dev/multipart-stream";
+import { streamParts, iterableToStream } from "@sv2dev/multipart-stream";
 
 for await (const part of streamParts(responseOrRequest)) {
   if (part.type === "application/json") {
@@ -16,21 +16,29 @@ for await (const part of streamParts(responseOrRequest)) {
     console.log(await part.text());
   } else if (part.filename) {
     // Example for bun:
-    Bun.write(part.filename, new Response(part.stream()));
+    const file = Bun.file(part.filename);
+    const writer = file.writer();
+    for await (const chunk of part) {
+      await writer.write(chunk);
+    }
+    await writer.close();
   }
 }
 ```
 
-You can also collect the parts in an array:
+The `streamParts()` function returns an `AsyncIterable<Part>`. The `Part` class
+is similar to a `Blob`.
+
+The streaming is designed to iterate over the parts and their bodies as they
+are received. If you don't process the body of a part while streaming, it
+will be skipped.
+
+For example, if you use the `Array.fromAsync()` function to collect the parts,
+the body of each part will be neglected:
 
 ```ts
-const parts = await Array.fromAsync(streamParts(responseOrRequest));
+const [firstPart] = await Array.fromAsync(streamParts(responseOrRequest));
+
+console.log(firstPart.type); // "application/json"
+console.log(await firstPart.json()); // ERROR: The body is empty
 ```
-
-But this makes the whole body being loaded into memory and might not be what
-you want.
-
-Note: `streamParts()` returns a `ReadableStream`. In some environments,
-`ReadableStream`s are not iterable.
-
-The API is not yet stable and maybe, we should switch to async iterators, instead.
