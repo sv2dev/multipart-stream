@@ -1,6 +1,6 @@
 {
   "name": "@sv2dev/multipart-stream",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A utility to process multipart/form-data and multipart/mixed bodies.",
   "repository": {
     "type": "git",
@@ -21,9 +21,10 @@
     "build": "tsc"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "^6.0.2"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0 || ^6.0.0"
   }
 }
