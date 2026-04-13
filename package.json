@@ -1,7 +1,12 @@
 {
   "name": "@sv2dev/multipart-stream",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A utility to process multipart/form-data and multipart/mixed bodies.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sv2dev/multipart-stream"
+  },
+  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,11 +15,6 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
-  },
-  "type": "module",
-  "repository": {
-    "url": "https://github.com/sv2dev/multipart-stream",
-    "type": "git"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
