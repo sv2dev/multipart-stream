@@ -23,5 +23,6 @@
     "noPropertyAccessFromIndexSignature": false,
     "outDir": "dist"
   },
-  "include": ["./index.ts", "./lib/**/*.ts"]
+  "include": ["./index.ts", "./lib/**/*.ts"],
+  "exclude": ["./lib/**/*.spec.ts"]
 }

@@ -89,7 +89,7 @@ export class Part implements AsyncIterable<Uint8Array> {
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/bytes)
    */
   async bytes(): Promise<Uint8Array> {
-    return await new Blob(await Array.fromAsync(this)).bytes();
+    return await new Blob(await Array.fromAsync(this) as BlobPart[]).bytes();
   }
 
   /**
