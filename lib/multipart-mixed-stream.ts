@@ -1,4 +1,4 @@
-import { Part } from "./part";
+import { Part } from "./part.js";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
