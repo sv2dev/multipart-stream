@@ -63,11 +63,16 @@ export class Part implements AsyncIterable<Uint8Array> {
    * [MDN Reference](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator)
    */
   [Symbol.asyncIterator](): AsyncIterator<Uint8Array> {
-    return this.iterable;
+    const it = this.iterable;
+    return Symbol.asyncIterator in it
+      ? it[Symbol.asyncIterator]()
+      : (async function* () {
+          yield it;
+        })();
   }
 
   constructor(
-    private readonly iterable: AsyncGenerator<Uint8Array>,
+    private readonly iterable: AsyncGenerator<Uint8Array> | Uint8Array,
     readonly headers: Headers
   ) {}
 
