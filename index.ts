@@ -1,3 +1,3 @@
-export { streamParts } from "./lib/multipart-mixed-stream";
-export { Part } from "./lib/part";
-export { iterableToStream } from "./lib/stream";
+export { streamParts } from "./lib/multipart-mixed-stream.js";
+export { Part } from "./lib/part.js";
+export { iterableToStream } from "./lib/stream.js";

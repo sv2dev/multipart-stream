@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { streamParts } from "./multipart-mixed-stream";
-import type { Part } from "./part";
+import { streamParts } from "./multipart-mixed-stream.js";
+import type { Part } from "./part.js";
 
 describe("streamParts()", () => {
   it("should yield parts", async () => {
